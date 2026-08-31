@@ -47,3 +47,19 @@ def upload_file(
         "keywords_found": result["keywords"],
         "urls_found": result["urls"],
     }
+@router.get("/")
+def list_my_files(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    records = db.query(FileRecord).filter(FileRecord.owner_id == current_user.id).all()
+    output = []
+    for r in records:
+        output.append({
+            "filename": r.filename,
+            "sha256": r.sha256_hash,
+            "uploaded_at": r.uploaded_at,
+            "risk_score": r.analysis.risk_score if r.analysis else None,
+            "classification": r.analysis.classification if r.analysis else None,
+        })
+    return output
